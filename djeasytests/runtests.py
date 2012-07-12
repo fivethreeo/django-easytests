@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import with_statement
-from djeasytests.test_utils.tmpdir import temp_dir
+from djeasytests.tmpdir import temp_dir
 import argparse
 import sys
 
