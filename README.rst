@@ -2,7 +2,7 @@
 django-easytesets
 =================
 
-A extendable category app using django-mptt for django-shop.
+Slightly modified test utils from django-cms as a own module
 
 Installation
 ------------

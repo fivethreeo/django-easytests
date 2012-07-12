@@ -16,7 +16,7 @@ CLASSIFIERS = [
 setup(
     name='django-easytests',
     version=shop_categories.get_version(),
-    description=',
+    description='Slightly modified test utils from django-cms as a own module',
     long_description=open(os.path.join(os.path.dirname(__file__), 'README.rst')).read(),
     author='Oyvind Saltvik',
     author_email='oyvind.saltvik@gmail.com',
