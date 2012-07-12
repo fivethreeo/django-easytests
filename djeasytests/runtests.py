@@ -4,7 +4,7 @@ from djeasytests.tmpdir import temp_dir
 import argparse
 import sys
 
-def runtests(test_runner=None, junit_output_dir='.',
+def runtests(configure=None, test_runner=None, junit_output_dir='.',
          time_tests=False, verbosity=1, failfast=False,
          test_labels=None, default_test_labels=None, tmp_dir_prefix=None, **kwargs):
     if not test_labels:
