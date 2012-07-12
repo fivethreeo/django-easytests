@@ -25,5 +25,5 @@ setup(
     classifiers=CLASSIFIERS,
     include_package_data=True,
     zip_safe=False,
-    install_requires=['django']
+    install_requires=['django>=1.3', 'argparse', 'unittest-xml-reporting']
 )
