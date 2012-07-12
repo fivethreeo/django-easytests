@@ -1,6 +1,6 @@
-=================
-django-easytesets
-=================
+================
+django-easytests
+================
 
 Slightly modified test utils from django-cms as a own module
 
