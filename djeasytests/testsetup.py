@@ -61,7 +61,7 @@ default_settings = dict(
     
 class TestSetup(object):
     
-    def __init__(self, appname='djeasytests', default_settings={})
+    def __init__(self, appname='djeasytests', default_settings={}):
         self.default_settings = default_settings
         self.appname = appname
         
