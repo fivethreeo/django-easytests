@@ -132,7 +132,7 @@ class TestSetup(object):
         from django.test.utils import get_runner
         TestRunner = get_runner(settings)
     
-        test_runner = TestRunner(verbosity=verbosity, interactive=False, failfast=failfast)
+        test_runner = TestRunner(verbosity=args.verbosity, interactive=False, failfast=args.failfast)
         failures = test_runner.run_tests(test_labels)
         sys.exit(failures)
                   
