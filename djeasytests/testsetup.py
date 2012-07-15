@@ -4,6 +4,8 @@ import argparse
 import sys
 from djeasytests.tmpdir import temp_dir
 
+gettext = lambda s: s
+
 default_settings = dict(
     CACHE_BACKEND = 'locmem:///',
     DEBUG = True,
