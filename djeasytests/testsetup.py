@@ -82,8 +82,6 @@ class TestSetup(object):
         parser.add_argument('--verbosity', default=1)
         parser.add_argument('--time-tests', action='store_true', default=False,
                 dest='time_tests')
-        parser.add_argument('--keep-db', action='store_true', default=False,
-                dest='keep_db')
         parser.add_argument('test_labels', nargs='*')
         return parser
         
