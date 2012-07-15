@@ -184,7 +184,7 @@ class TestSetup(object):
     def setup_database(self, settings):
         databases = getattr(settings, 'DATABASES', None)
         database_name = databases and databases['default']['NAME']
-        if database_name and database_name != ':memory:'
+        if database_name and database_name != ':memory:':
             new_db = not os.path.exists(database_name)
             from django.core.management import call_command
             call_command('syncdb', interactive=False, migrate_all=new_db)
