@@ -166,7 +166,7 @@ class TestSetup(object):
            insecure_serving=True)
     
     def runshell(self, **kwargs):
-        parser = self.argparser_test()
+        parser = self.argparser_shell()
         args = parser.parse_args()
         settings = self.configure(args=args)
         self.setup_database(settings)
