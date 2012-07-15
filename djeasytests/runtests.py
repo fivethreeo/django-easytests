@@ -21,7 +21,10 @@ def runtests(configure=None, test_runner=None, junit_output_dir='.',
             failures = test_runner.run_tests(test_labels)
     sys.exit(failures)
     
-def runtests_parse(test_labels_prefix='djeasytests', default_test_labels=['djeasytests'], tmp_dir_prefix='djeasytests', **kwargs):
+def runtests_parse(appname='djeasytests', **kwargs):
+    test_labels_prefix = appname
+    default_test_labels = [appname]
+    tmp_dir_prefix = 'test-%s' % appname
     parser = argparse.ArgumentParser()
     parser.add_argument('--jenkins', action='store_true', default=False,
             dest='jenkins')
