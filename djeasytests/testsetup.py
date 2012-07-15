@@ -98,6 +98,7 @@ class TestSetup(object):
     
     def run(self, what):
         if what in ('tests', 'shell', 'testserver'):
+            tmp_dir_prefix = '%s-test-tmpdir' % self.appname
             with temp_dir(prefix=tmp_dir_prefix) as STATIC_ROOT:
                 with temp_dir(prefix=tmp_dir_prefix) as MEDIA_ROOT:
                     getattr(self, 'run%s' % what)(STATIC_ROOT=STATIC_ROOT, MEDIA_ROOT=MEDIA_ROOT)
