@@ -189,7 +189,8 @@ class TestSetup(object):
     def setup_database(self, settings):
         databases = getattr(settings, 'DATABASES', None)
         database_name = databases and databases['default']['NAME']
-        if database_name and database_name != ':memory:':
+        database_engine = databases and databases['default']['ENGINE'] 
+        if database_engine and database_name and database_engine == 'django.db.backends.sqlite3' and database_name != ':memory:':
             new_db = not os.path.exists(database_name)
             from django.core.management import call_command
             if 'south' in settings.INSTALLED_APPS:
