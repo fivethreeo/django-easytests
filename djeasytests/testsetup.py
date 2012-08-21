@@ -13,8 +13,6 @@ default_settings = dict(
     DATABASE_SUPPORTS_TRANSACTIONS = True,
     SITE_ID = 1,
     USE_I18N = True,
-    MEDIA_ROOT = '/media/',
-    STATIC_ROOT = '/static/',
     MEDIA_URL = '/media/',
     STATIC_URL = '/static/',
     ADMIN_MEDIA_PREFIX = '/static/admin/',
@@ -177,6 +175,12 @@ class TestSetup(object):
     def configure(self, args=None, **kwargs):
         from django.conf import settings
         defaults = self.default_settings
+        
+        if 'MEDIA_ROOT' in defaults:
+            del kwargs['MEDIA_ROOT']
+        if 'STATIC_ROOT' in defaults:
+            del kwargs['STATIC_ROOT']
+            
         defaults.update(kwargs)
         defaults.update(self.handle_args(args))
         settings.configure(**defaults)
