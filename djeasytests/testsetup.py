@@ -178,7 +178,7 @@ class TestSetup(object):
         
         if 'MEDIA_ROOT' in defaults and 'MEDIA_ROOT' in kwargs:
             del kwargs['MEDIA_ROOT']
-        if 'STATIC_ROOT' in defaults and 'STATIC_ROOT' in kwargs::
+        if 'STATIC_ROOT' in defaults and 'STATIC_ROOT' in kwargs:
             del kwargs['STATIC_ROOT']
             
         defaults.update(kwargs)
