@@ -176,9 +176,9 @@ class TestSetup(object):
         from django.conf import settings
         defaults = self.default_settings
         
-        if 'MEDIA_ROOT' in defaults:
+        if 'MEDIA_ROOT' in defaults and 'MEDIA_ROOT' in kwargs:
             del kwargs['MEDIA_ROOT']
-        if 'STATIC_ROOT' in defaults:
+        if 'STATIC_ROOT' in defaults and 'STATIC_ROOT' in kwargs::
             del kwargs['STATIC_ROOT']
             
         defaults.update(kwargs)
