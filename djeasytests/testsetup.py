@@ -135,7 +135,7 @@ class TestSetup(object):
     def runtestserver(self, **kwargs):
         parser = self.argparser_testserver()
         args = parser.parse_args()
-        settings = self.configure(args=args)
+        settings = self.configure(args=args, **kwargs)
         self.setup_database(settings)
         from django.contrib.auth.models import User
         if not User.objects.filter(is_superuser=True).exists():
@@ -164,7 +164,7 @@ class TestSetup(object):
     def runshell(self, **kwargs):
         parser = self.argparser_shell()
         args = parser.parse_args()
-        settings = self.configure(args=args)
+        settings = self.configure(args=args, **kwargs)
         self.setup_database(settings)
         from django.core.management import call_command
         call_command('shell')
