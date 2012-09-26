@@ -193,7 +193,7 @@ class TestSetup(object):
             del kwargs['MEDIA_ROOT']
         if 'STATIC_ROOT' in defaults and 'STATIC_ROOT' in kwargs:
             del kwargs['STATIC_ROOT']
-           p 
+         
         defaults.update(kwargs)
         defaults.update(self.handle_args(args))
         settings.configure(**defaults)
