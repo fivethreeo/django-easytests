@@ -1,7 +1,7 @@
 from __future__ import with_statement
 import os
 import sys
-from djago.core.management import LaxOptionParser
+from django.core.management import LaxOptionParser
 from djeasytests.tmpdir import temp_dir
 
 gettext = lambda s: s
