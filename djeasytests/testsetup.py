@@ -1,7 +1,7 @@
 from __future__ import with_statement
 import os
-import argparse
 import sys
+from djago.core.management import LaxOptionParser
 from djeasytests.tmpdir import temp_dir
 
 gettext = lambda s: s
@@ -66,7 +66,7 @@ class TestSetup(object):
         self.appname = appname
         
     def get_argparser(self):
-        return argparse.ArgumentParser()
+        return LaxOptionParser()
         
     def argparser_tests(self):
         parser = self.get_argparser()
@@ -91,9 +91,14 @@ class TestSetup(object):
                 
     def argparser_shell(self):
         return self.get_argparser()
+        
+    def argparser_manage(self):
+        parser = self.get_argparser()
+        parser.add_argument('manage_command', nargs='*')
+        return parser
     
     def run(self, what):
-        if what in ('tests', 'shell', 'testserver'):
+        if what in ('tests', 'shell', 'testserver', 'manage'):
             tmp_dir_prefix = '%s-test-tmpdir' % self.appname
             with temp_dir(prefix=tmp_dir_prefix) as STATIC_ROOT:
                 with temp_dir(prefix=tmp_dir_prefix) as MEDIA_ROOT:
@@ -169,6 +174,14 @@ class TestSetup(object):
         from django.core.management import call_command
         call_command('shell')
         
+    def runmanage(self, **kwargs):
+        parser = self.argparser_manage()
+        args = parser.parse_args()
+        settings = self.configure(args=args, **kwargs)
+        self.setup_database(settings)
+        from django.core.management import execute_from_commmand_line
+        execute_from_commmand_line(args.manage_command)
+                
     def handle_args(self, args):
         return {}
                 
@@ -180,7 +193,7 @@ class TestSetup(object):
             del kwargs['MEDIA_ROOT']
         if 'STATIC_ROOT' in defaults and 'STATIC_ROOT' in kwargs:
             del kwargs['STATIC_ROOT']
-            
+           p 
         defaults.update(kwargs)
         defaults.update(self.handle_args(args))
         settings.configure(**defaults)
