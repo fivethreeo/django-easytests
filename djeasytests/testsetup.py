@@ -1,7 +1,7 @@
 from __future__ import with_statement
 import os
 import sys
-from django.core.management import LaxOptionParser
+import argparse
 from djeasytests.tmpdir import temp_dir
 
 gettext = lambda s: s
@@ -66,7 +66,7 @@ class TestSetup(object):
         self.appname = appname
         
     def get_argparser(self):
-        return LaxOptionParser()
+        return argparse.ArgumentParser()
         
     def argparser_tests(self):
         parser = self.get_argparser()
@@ -94,7 +94,6 @@ class TestSetup(object):
         
     def argparser_manage(self):
         parser = self.get_argparser()
-        parser.add_argument('manage_command', nargs='*')
         return parser
     
     def run(self, what):
@@ -176,11 +175,11 @@ class TestSetup(object):
         
     def runmanage(self, **kwargs):
         parser = self.argparser_manage()
-        args = parser.parse_args()
+        args, rest = parser.parse_known_args()
         settings = self.configure(args=args, **kwargs)
         self.setup_database(settings)
         from django.core.management import execute_from_commmand_line
-        execute_from_commmand_line(args.manage_command)
+        execute_from_commmand_line(rest)
                 
     def handle_args(self, args):
         return {}
