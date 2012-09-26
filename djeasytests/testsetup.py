@@ -179,7 +179,7 @@ class TestSetup(object):
         settings = self.configure(args=args, **kwargs)
         self.setup_database(settings)
         from django.core.management import execute_from_command_line
-        execute_from_commmand_line(rest)
+        execute_from_command_line(rest)
                 
     def handle_args(self, args):
         return {}
