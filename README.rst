@@ -26,13 +26,18 @@ Example usage in runshell.py:
     #!/usr/bin/env python
     from djeasytests.testsetup import TestSetup, default_settings
     
+    # optionally add existing project settings
+    
+    from djeasytests.utils import settings_to_dict
+    from project import settings
+    default_settings.update(settings_to_dict(settings))
+        
     default_settings.update(dict(
         ROOT_URLCONF='project.urls',
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
                 'NAME': 'project.sqlite',
-            }
         },
         INSTALLED_APPS = [
             'django.contrib.auth',
@@ -59,4 +64,7 @@ Example usage in runtests.py:
     
     if __name__ == '__main__':
         testsetup.run('tests') # Can be 'tests', 'shell', 'testserver' or 'manage'
+        
+
+        
         
