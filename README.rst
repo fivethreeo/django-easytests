@@ -19,7 +19,7 @@ For the development version:
 
     pip install -e git+git://github.com/fivethreeo/django-easytests.git#egg=django-easytests
 
-Example usage in runtests.py:
+Example usage in runshell.py:
 
 ::
     
@@ -52,4 +52,15 @@ Example usage in runtests.py:
     testsetup = TestSetup(appname='shop_categories', default_settings=default_settings)
     
     if __name__ == '__main__':
-        testsetup.run('tests') # Can be 'tests', 'shell' or 'testserver'
+        testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
+        
+Example usage in runtests.py:
+
+::
+    #!/usr/bin/env python
+    
+    from runshell import testsetup
+    
+    if __name__ == '__main__':
+        testsetup.run('tests') # Can be 'tests', 'shell', 'testserver' or 'manage'
+        
