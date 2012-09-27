@@ -24,8 +24,18 @@ Example usage in runshell.py:
 ::
     
     #!/usr/bin/env python
+    
+    import sys
+    import os
+    
     from djeasytests.testsetup import TestSetup, default_settings
     
+    # optionally add apps to path
+
+    local_apps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'local_apps')
+    if not local_apps in sys.path:
+        sys.path.append(local_apps)    
+        
     # optionally add existing project settings
     
     from djeasytests.utils import settings_to_dict
@@ -54,7 +64,7 @@ Example usage in runshell.py:
     if __name__ == '__main__':
         testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
         
-Example usage in runtests.py:
+Example usage in runmanage.py:
 
 ::
 
@@ -63,7 +73,7 @@ Example usage in runtests.py:
     from runshell import testsetup
     
     if __name__ == '__main__':
-        testsetup.run('tests') # Can be 'tests', 'shell', 'testserver' or 'manage'
+        testsetup.run('manage') # Can be 'tests', 'shell', 'testserver' or 'manage'
         
 
         
