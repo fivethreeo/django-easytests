@@ -214,8 +214,7 @@ class TestSetup(object):
                 new_db = not os.path.exists(database_name)
                 from django.core.management import call_command
                 if 'south' in settings.INSTALLED_APPS:
-                    if not no_migrate:
-                        call_command('syncdb', interactive=False, migrate_all=new_db)
-                        call_command('migrate', interactive=False, fake=new_db)
+                    call_command('syncdb', interactive=False, migrate_all=new_db)
+                    call_command('migrate', interactive=False, fake=new_db)
                 else:
                     call_command('syncdb', interactive=False)
