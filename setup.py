@@ -25,5 +25,5 @@ setup(
     classifiers=CLASSIFIERS,
     include_package_data=True,
     zip_safe=False,
-    install_requires=['Django>=1.3', 'argparse', 'unittest-xml-reporting']
+    install_requires=['argparse', 'unittest-xml-reporting']
 )
