@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-VERSION = (0, 8, 1, 'beta', 0)
+VERSION = (0, 8, 2, 'beta', 0)
 
 def get_version(): # pragma: no cover
     version = '%s.%s' % (VERSION[0], VERSION[1])

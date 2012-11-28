@@ -85,15 +85,22 @@ class TestSetup(object):
         
     def argparser_testserver(self):
         parser = self.get_argparser()
+        parser.add_argument('--no-sync', action='store_true', default=False,
+                dest='no_sync')
         parser.add_argument('-p', '--port', default='8000')
         parser.add_argument('-b', '--bind', default='127.0.0.1')
         return parser
                 
     def argparser_shell(self):
-        return self.get_argparser()
+        parser = self.get_argparser()
+        parser.add_argument('--no-sync', action='store_true', default=False,
+                dest='no_sync')
+        return parser
         
     def argparser_manage(self):
         parser = self.get_argparser()
+        parser.add_argument('--no-sync', action='store_true', default=False,
+                dest='no_sync')
         return parser
     
     def run(self, what):
@@ -140,7 +147,7 @@ class TestSetup(object):
         parser = self.argparser_testserver()
         args = parser.parse_args()
         settings = self.configure(args=args, **kwargs)
-        self.setup_database(settings)
+        self.setup_database(settings, no_sync=args.no_sync)
         from django.contrib.auth.models import User
         if not User.objects.filter(is_superuser=True).exists():
             usr = User()
@@ -169,7 +176,7 @@ class TestSetup(object):
         parser = self.argparser_shell()
         args = parser.parse_args()
         settings = self.configure(args=args, **kwargs)
-        self.setup_database(settings)
+        self.setup_database(settings, no_sync=args.no_sync)
         from django.core.management import call_command
         call_command('shell')
         
@@ -177,7 +184,7 @@ class TestSetup(object):
         parser = self.argparser_manage()
         args, rest = parser.parse_known_args()
         settings = self.configure(args=args, **kwargs)
-        self.setup_database(settings)
+        self.setup_database(settings, no_sync=args.no_sync)
         from django.core.management import execute_from_command_line
         execute_from_command_line([sys.argv[0]] + rest)
                 
@@ -198,15 +205,17 @@ class TestSetup(object):
         settings.configure(**defaults)
         return settings
                 
-    def setup_database(self, settings):
-        databases = getattr(settings, 'DATABASES', None)
-        database_name = databases and databases['default']['NAME']
-        database_engine = databases and databases['default']['ENGINE'] 
-        if database_engine and database_name and database_engine == 'django.db.backends.sqlite3' and database_name != ':memory:':
-            new_db = not os.path.exists(database_name)
-            from django.core.management import call_command
-            if 'south' in settings.INSTALLED_APPS:
-                call_command('syncdb', interactive=False, migrate_all=new_db)
-                call_command('migrate', interactive=False, fake=new_db)
-            else:
-                call_command('syncdb', interactive=False)
+    def setup_database(self, settings, no_sync=False):
+        if not no_sync:
+            databases = getattr(settings, 'DATABASES', None)
+            database_name = databases and databases['default']['NAME']
+            database_engine = databases and databases['default']['ENGINE'] 
+            if database_engine and database_name and database_engine == 'django.db.backends.sqlite3' and database_name != ':memory:':
+                new_db = not os.path.exists(database_name)
+                from django.core.management import call_command
+                if 'south' in settings.INSTALLED_APPS:
+                    if not no_migrate:
+                        call_command('syncdb', interactive=False, migrate_all=new_db)
+                        call_command('migrate', interactive=False, fake=new_db)
+                else:
+                    call_command('syncdb', interactive=False)
