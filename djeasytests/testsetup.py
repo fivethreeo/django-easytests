@@ -4,65 +4,11 @@ import sys
 import argparse
 from djeasytests.tmpdir import temp_dir
 
-gettext = lambda s: s
-
-default_settings = dict(
-    CACHE_BACKEND = 'locmem:///',
-    DEBUG = True,
-    TEMPLATE_DEBUG = True,
-    DATABASE_SUPPORTS_TRANSACTIONS = True,
-    SITE_ID = 1,
-    USE_I18N = True,
-    MEDIA_URL = '/media/',
-    STATIC_URL = '/static/',
-    ADMIN_MEDIA_PREFIX = '/static/admin/',
-    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend',
-    SECRET_KEY = 'key',
-    TEMPLATE_LOADERS = (
-        'django.template.loaders.filesystem.Loader',
-        'django.template.loaders.app_directories.Loader',
-        'django.template.loaders.eggs.Loader',
-    ),
-   TEMPLATE_CONTEXT_PROCESSORS = [
-        "django.contrib.auth.context_processors.auth",
-        "django.core.context_processors.i18n",
-        "django.core.context_processors.debug",
-        "django.core.context_processors.request",
-        "django.core.context_processors.media",
-        'django.core.context_processors.csrf',
-        "django.core.context_processors.static"
-    ],
-    MIDDLEWARE_CLASSES = [
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.common.CommonMiddleware',
-        'django.middleware.doc.XViewMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware'
-    ],
-    INSTALLED_APPS = [
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.admin',
-        'django.contrib.sites',
-        'django.contrib.staticfiles'
-    ],
-    LANGUAGE_CODE = "en",
-    LANGUAGES = (
-        ('en', gettext('English')),
-        ('fr', gettext('French')),
-        ('de', gettext('German')),
-        ('pt-BR', gettext("Brazil")),
-        ('nl', gettext("Dutch")),
-    ),
-    SOUTH_TESTS_MIGRATE = False
-)
-    
 class TestSetup(object):
     
-    def __init__(self, appname='djeasytests', default_settings={}):
+    def __init__(self, appname='djeasytests', default_settings='django.conf.global_settings', settings={}):
         self.default_settings = default_settings
+        self.settings = settings
         self.appname = appname
         
     def get_argparser(self):
@@ -193,16 +139,14 @@ class TestSetup(object):
                 
     def configure(self, args=None, **kwargs):
         from django.conf import settings
-        defaults = self.default_settings
         
-        if 'MEDIA_ROOT' in defaults and 'MEDIA_ROOT' in kwargs:
+        if 'MEDIA_ROOT' in self.settings and 'MEDIA_ROOT' in kwargs:
             del kwargs['MEDIA_ROOT']
-        if 'STATIC_ROOT' in defaults and 'STATIC_ROOT' in kwargs:
+        if 'STATIC_ROOT' in self.settings and 'STATIC_ROOT' in kwargs:
             del kwargs['STATIC_ROOT']
-         
-        defaults.update(kwargs)
-        defaults.update(self.handle_args(args))
-        settings.configure(**defaults)
+            
+        kwargs.update(self.handle_args(args))
+        settings.configure(default_settings=self.default_settings, **kwargs)
         return settings
                 
     def setup_database(self, settings, no_sync=False):
