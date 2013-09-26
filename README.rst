@@ -42,7 +42,7 @@ Example usage in runshell.py:
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': 'project.sqlite',
+                'NAME': 'app.sqlite'
         },
         INSTALLED_APPS = [
             'django.contrib.auth',
@@ -50,11 +50,11 @@ Example usage in runshell.py:
             'django.contrib.sessions',
             'django.contrib.admin',
             'django.contrib.sites',
-            'django.contrib.staticfiles',
+            'django.contrib.staticfiles'
         ]
     )
     
-    testsetup = TestSetup(appname='project', new_settings=new_settings)
+    testsetup = TestSetup(appname='app', new_settings=new_settings)
     
     if __name__ == '__main__':
         testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
@@ -70,7 +70,7 @@ app/base_settings.py
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'base.sqlite',
+            'NAME': 'base.sqlite'
     }
 
 app/settings.py
@@ -89,7 +89,7 @@ app/local_settings.py
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'local.sqlite',
+            'NAME': 'local.sqlite'
     }
 
 app/dev_settings.py
@@ -109,13 +109,13 @@ runshell.py
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': 'project.sqlite',
+                'NAME': 'app.sqlite'
             }
         }
     )
     
     from app import dev_settings
-    testsetup = TestSetup(appname='project', default_settings=dev_settings, new_settings=new_settings)
+    testsetup = TestSetup(appname='app', default_settings=dev_settings, new_settings=new_settings)
     
     if __name__ == '__main__':
         testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
