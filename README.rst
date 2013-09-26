@@ -59,9 +59,10 @@ Example usage in runshell.py:
         testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
 
 Using default settings:
-
+-----------------------
 
 app/base_settings.py
+====================
 
 ::
     
@@ -72,15 +73,16 @@ app/base_settings.py
     }
 
 app/settings.py
+===============
 
 ::
     
     from app.base_settings import *
     from local_settings import *
     
-    app/local_settings.py
+app/local_settings.py
     
-    ::
+::
     
     DATABASES = {
         'default': {
@@ -89,6 +91,7 @@ app/settings.py
     }
 
 app/dev_settings.py
+===================
 
 ::
     
@@ -96,6 +99,7 @@ app/dev_settings.py
     from app.base_settings import *
     
 runshell.py
+===========
 
 ::    
 
