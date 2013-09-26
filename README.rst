@@ -116,9 +116,13 @@ runshell.py
     
     from app import dev_settings
     testsetup = TestSetup(appname='project', default_settings=dev_settings, new_settings=new_settings)
+    
+    if __name__ == '__main__':
+        testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
 
 
 Example usage in runmanage.py:
+==============================
 
 ::
 
