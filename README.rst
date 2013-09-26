@@ -35,14 +35,8 @@ Example usage in runshell.py:
     local_apps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'local_apps')
     if not local_apps in sys.path:
         sys.path.append(local_apps)    
-        
-    # optionally add existing project settings
-    
-    from djeasytests.utils import settings_to_dict
-    from project import settings
-    default_settings.update(settings_to_dict(settings))
-        
-    default_settings.update(dict(
+
+    new_settings = dict(
         ROOT_URLCONF='project.urls',
         DATABASES = {
             'default': {
@@ -57,13 +51,67 @@ Example usage in runshell.py:
             'django.contrib.sites',
             'django.contrib.staticfiles',
         ]
-    ))
+    )
     
-    testsetup = TestSetup(appname='project', default_settings=default_settings)
+    testsetup = TestSetup(appname='project', new_settings=new_settings)
     
     if __name__ == '__main__':
         testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
-        
+
+Using default settings:
+
+
+app/base_settings.py
+
+::
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'base.sqlite',
+    }
+
+app/settings.py
+
+::
+    
+    from app.base_settings import *
+    from local_settings import *
+    
+    app/local_settings.py
+    
+    ::
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'local.sqlite',
+    }
+
+app/dev_settings.py
+
+::
+    
+    from django.conf import global_settings
+    from app.base_settings import *
+    
+runshell.py
+
+::    
+
+    new_settings = dict(
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': 'project.sqlite',
+            }
+        }
+    )
+    
+    from app import dev_settings
+    testsetup = TestSetup(appname='project', default_settings=dev_settings, new_settings=new_settings)
+
+
 Example usage in runmanage.py:
 
 ::
