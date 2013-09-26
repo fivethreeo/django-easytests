@@ -4,11 +4,13 @@ import sys
 import argparse
 from djeasytests.tmpdir import temp_dir
 from django.conf import global_settings
+from django.conf import settings
+
 class TestSetup(object):
     
-    def __init__(self, appname='djeasytests', default_settings=global_settings, settings={}):
+    def __init__(self, appname='djeasytests', default_settings=global_settings, new_settings={}):
         self.default_settings = default_settings
-        self.settings = settings
+        self.new_settings = new_settings
         self.appname = appname
         
     def get_argparser(self):
@@ -92,8 +94,8 @@ class TestSetup(object):
     def runtestserver(self, **kwargs):
         parser = self.argparser_testserver()
         args = parser.parse_args()
-        settings = self.configure(args=args, **kwargs)
-        self.setup_database(settings, no_sync=args.no_sync)
+        new_settings = self.configure(args=args, **kwargs)
+        self.setup_database(new_settings, no_sync=args.no_sync)
         from django.contrib.auth.models import User
         if not User.objects.filter(is_superuser=True).exists():
             usr = User()
@@ -121,16 +123,16 @@ class TestSetup(object):
     def runshell(self, **kwargs):
         parser = self.argparser_shell()
         args = parser.parse_args()
-        settings = self.configure(args=args, **kwargs)
-        self.setup_database(settings, no_sync=args.no_sync)
+        new_settings = self.configure(args=args, **kwargs)
+        self.setup_database(new_settings, no_sync=args.no_sync)
         from django.core.management import call_command
         call_command('shell')
         
     def runmanage(self, **kwargs):
         parser = self.argparser_manage()
         args, rest = parser.parse_known_args()
-        settings = self.configure(args=args, **kwargs)
-        self.setup_database(settings, no_sync=args.no_sync)
+        new_settings = self.configure(args=args, **kwargs)
+        self.setup_database(new_settings, no_sync=args.no_sync)
         from django.core.management import execute_from_command_line
         execute_from_command_line([sys.argv[0]] + rest)
                 
@@ -138,13 +140,13 @@ class TestSetup(object):
         return {}
                 
     def configure(self, args=None, **kwargs):
-        from django.conf import settings
         
-        if 'MEDIA_ROOT' in self.settings and 'MEDIA_ROOT' in kwargs:
+        if 'MEDIA_ROOT' in self.new_settings and 'MEDIA_ROOT' in kwargs:
             del kwargs['MEDIA_ROOT']
-        if 'STATIC_ROOT' in self.settings and 'STATIC_ROOT' in kwargs:
+        if 'STATIC_ROOT' in self.new_settings and 'STATIC_ROOT' in kwargs:
             del kwargs['STATIC_ROOT']
             
+        kwargs = self.new_settings
         kwargs.update(self.handle_args(args))
         settings.configure(default_settings=self.default_settings, **kwargs)
         return settings
