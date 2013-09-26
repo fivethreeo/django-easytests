@@ -3,10 +3,10 @@ import os
 import sys
 import argparse
 from djeasytests.tmpdir import temp_dir
-
+from django.conf import global_settings
 class TestSetup(object):
     
-    def __init__(self, appname='djeasytests', default_settings='django.conf.global_settings', settings={}):
+    def __init__(self, appname='djeasytests', default_settings=global_settings, settings={}):
         self.default_settings = default_settings
         self.settings = settings
         self.appname = appname
