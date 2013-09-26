@@ -20,6 +20,7 @@ For the development version:
     pip install -e git+git://github.com/fivethreeo/django-easytests.git#egg=django-easytests
 
 Example usage in runshell.py:
+-----------------------------
 
 ::
     
@@ -81,7 +82,8 @@ app/settings.py
     from local_settings import *
     
 app/local_settings.py
-    
+======================
+
 ::
     
     DATABASES = {
