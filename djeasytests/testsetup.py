@@ -6,11 +6,34 @@ from djeasytests.tmpdir import temp_dir
 from django.conf import global_settings
 from django.conf import settings
 
+class GlobalSettingsWrapper:
+    
+    def __init__(settings, default_settings):
+        self.settings = settings
+        self.default_settings = default_settings
+        
+    def __getattr__(self, setting):
+        try:
+            return getattr(self.settings, setting)
+        except AttributeError:
+            return getattr(self.default_settings, setting)
+        
+        
 class TestSetup(object):
     
-    def __init__(self, appname='djeasytests', default_settings=global_settings, new_settings={}):
-        self.default_settings = default_settings
-        self.new_settings = new_settings
+    default_settings = None
+    
+    def __init__(self, appname='djeasytests', settings={}, fallback_settings=None, default_settings=global_settings):
+        
+        if fallback_settings:
+            if default_settings:
+                self.default_settings = GlobalSettingsWrapper(fallback_settings, default_settings)
+            else:
+                self.default_settings = fallback_settings
+        else:
+            self.default_settings = default_settings
+            
+        self.new_settings = settings
         self.appname = appname
         
     def get_argparser(self):

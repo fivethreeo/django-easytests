@@ -29,7 +29,7 @@ Example usage in runshell.py:
     import sys
     import os
     
-    from djeasytests.testsetup import TestSetup, default_settings
+    from djeasytests.testsetup import TestSetup
     
     # optionally add apps to path
 
@@ -37,7 +37,7 @@ Example usage in runshell.py:
     if not local_apps in sys.path:
         sys.path.append(local_apps)    
 
-    new_settings = dict(
+    settings = dict(
         ROOT_URLCONF='project.urls',
         DATABASES = {
             'default': {
@@ -54,12 +54,12 @@ Example usage in runshell.py:
         ]
     )
     
-    testsetup = TestSetup(appname='app', new_settings=new_settings)
+    testsetup = TestSetup(appname='app', settings=settings)
     
     if __name__ == '__main__':
         testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
 
-Using default settings:
+Using existing settings:
 -----------------------
 
 app/base_settings.py
@@ -71,6 +71,7 @@ app/base_settings.py
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': 'base.sqlite'
+        }
     }
 
 app/settings.py
@@ -90,22 +91,16 @@ app/local_settings.py
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': 'local.sqlite'
+        }
     }
 
-app/dev_settings.py
-===================
 
-::
-    
-    from django.conf import global_settings
-    from app.base_settings import *
-    
 runshell.py
 ===========
 
 ::    
 
-    new_settings = dict(
+    settings = dict(
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
@@ -114,12 +109,23 @@ runshell.py
         }
     )
     
-    from app import dev_settings
-    testsetup = TestSetup(appname='app', default_settings=dev_settings, new_settings=new_settings)
+    from app import base_settings
+    testsetup = TestSetup(appname='app', settings=settings, fallback_settings=base_settings)
     
     if __name__ == '__main__':
         testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
 
+default_settings
+================
+
+By default fallback_settings gets merged with default_settings ( by default django.conf.global_settings) like in djangos settings.configure.
+
+This can be changed by passing default_settings with a module/object other than global_settings to TestSetup.
+
+::
+
+    from app import other_global_settings
+    testsetup = TestSetup(appname='app', settings=settings, fallback_settings=base_settings, default_settings=other_global_settings)    
 
 Example usage in runmanage.py:
 ==============================
