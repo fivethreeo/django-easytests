@@ -8,7 +8,7 @@ from django.conf import settings
 
 class GlobalSettingsWrapper:
     
-    def __init__(settings, default_settings):
+    def __init__(self, settings, default_settings):
         self.settings = settings
         self.default_settings = default_settings
         
