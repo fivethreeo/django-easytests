@@ -43,6 +43,7 @@ Example usage in runshell.py:
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
                 'NAME': 'app.sqlite'
+            }
         },
         INSTALLED_APPS = [
             'django.contrib.auth',
