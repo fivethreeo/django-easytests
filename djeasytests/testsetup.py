@@ -21,9 +21,31 @@ class GlobalSettingsWrapper:
         
 class TestSetup(object):
     
+    __doc__ = '''django development helper script.
+Usage:
+    %(filename)s [--parallel | --failfast] [--migrate] test [<test-label>...]
+    %(filename)s timed test [test-label...]
+    %(filename)s [--parallel] [--migrate] isolated test [<test-label>...]
+    %(filename)s [--port=<port>] [--bind=<bind>] [--migrate] server
+    %(filename)s [--migrate] shell
+    %(filename)s compilemessages
+    %(filename)s makemessages
+
+Options:
+    -h --help                   Show this screen.
+    --version                   Show version.
+    --parallel                  Run tests in parallel.
+    --migrate                   Use south migrations in test or server command.
+    --failfast                  Stop tests on first failure (only if not --parallel).
+    --port=<port>               Port to listen on [default: 8000].
+    --bind=<bind>               Interface to bind to [default: 127.0.0.1].
+'''
+    
     default_settings = None
     
-    def __init__(self, appname='djeasytests', settings={}, fallback_settings=None, default_settings=global_settings):
+    def __init__(self, appname='djeasytests', settings={}, fallback_settings=None, default_settings=global_settings, version=None):
+        
+        self.version = version
         
         if fallback_settings:
             if default_settings:
@@ -35,64 +57,49 @@ class TestSetup(object):
             
         self.new_settings = settings
         self.appname = appname
+
+    def get_doc(self):
+        return self.__doc__ % {'filename': self.filename}
         
-    def get_argparser(self):
-        return argparse.ArgumentParser()
-        
-    def argparser_tests(self):
-        parser = self.get_argparser()
-        parser.add_argument('--jenkins', action='store_true', default=False,
-                dest='jenkins')
-        parser.add_argument('--jenkins-data-dir', default='.', dest='jenkins_data_dir')
-        parser.add_argument('--coverage', action='store_true', default=False,
-                dest='coverage')
-        parser.add_argument('--failfast', action='store_true', default=False,
-                dest='failfast')
-        parser.add_argument('--verbosity', default=1)
-        parser.add_argument('--time-tests', action='store_true', default=False,
-                dest='time_tests')
-        parser.add_argument('test_labels', nargs='*')
-        return parser
-        
-    def argparser_testserver(self):
-        parser = self.get_argparser()
-        parser.add_argument('--no-sync', action='store_true', default=False,
-                dest='no_sync')
-        parser.add_argument('-p', '--port', default='8000')
-        parser.add_argument('-b', '--bind', default='127.0.0.1')
-        return parser
-                
-    def argparser_shell(self):
-        parser = self.get_argparser()
-        parser.add_argument('--no-sync', action='store_true', default=False,
-                dest='no_sync')
-        return parser
-        
-    def argparser_manage(self):
-        parser = self.get_argparser()
-        parser.add_argument('--no-sync', action='store_true', default=False,
-                dest='no_sync')
-        return parser
+    def get_args(self):
+        return docopt(self.get_doc(), version=self.version, options_first=True)
     
-    def run(self, what):
-        if what in ('tests', 'shell', 'testserver', 'manage'):
-            tmp_dir_prefix = '%s-test-tmpdir' % self.appname
-            with temp_dir(prefix=tmp_dir_prefix) as STATIC_ROOT:
-                with temp_dir(prefix=tmp_dir_prefix) as MEDIA_ROOT:
-                    getattr(self, 'run%s' % what)(STATIC_ROOT=STATIC_ROOT, MEDIA_ROOT=MEDIA_ROOT)
-        
-    def runtests(self, **kwargs):
-        parser = self.argparser_tests()
-        args = parser.parse_args()
-        
-        if getattr(args, 'jenkins', False):
-            test_runner = 'djeasytests.runners.JenkinsTestRunner'
-        else:
-            test_runner = 'djeasytests.runners.NormalTestRunner'
-        junit_output_dir = getattr(args, 'jenkins_data_dir', '.')
+    def run(self, thefile):
+        self.path = os.path.abspath(thefile)
+        self.dirname = os.path.dirname(self.path)
+        self.filename = os.path.basename(self.path)
+        self.args = self.get_args()
+        if self.args['test']:
+            if self.args['isolated']:
+                failures = self.isolated()
+                print()
+                print("Failed tests")
+                print("============")
+                if failures:
+                    for failure in failures:
+                        print(" - %s" % failure)
+                else:
+                    print(" None")
+                num_failures = len(failures)
+            elif self.args['timed']:
+                num_failures = self.timed()
+            else:
+                num_failures = self.test()
+            sys.exit(num_failures)
+        elif self.args['server']:
+            self.server()
+        elif self.args['shell']:
+            self.shell()
+        elif self.args['compilemessages']:
+            self.compilemessages()
+        elif self.args['makemessages']:
+            self.makemessages()
+                    
+    def test(self, **kwargs):
+
         time_tests = getattr(args, 'time_tests', False)
         
-        test_labels = ['%s.%s' % (self.appname, label) for label in args.test_labels]
+        test_labels = ['%s.%s' % (self.appname, label) for label in self.args.test_labels]
         if not test_labels:
             test_labels = [self.appname]
             
@@ -114,9 +121,9 @@ class TestSetup(object):
         failures = test_runner.run_tests(test_labels)
         sys.exit(failures)
                   
-    def runtestserver(self, **kwargs):
+    def server(self, **kwargs):
         parser = self.argparser_testserver()
-        args = parser.parse_args()
+        self.args = parser.parse_args()
         new_settings = self.configure(args=args, **kwargs)
         self.setup_database(new_settings, no_sync=args.no_sync)
         from django.contrib.auth.models import User
@@ -138,41 +145,35 @@ class TestSetup(object):
         rs.stderr = sys.stderr
         rs.use_ipv6 = False
         rs._raw_ipv6 = False
-        rs.addr = args.bind
-        rs.port = args.port
-        rs.inner_run(addrport='%s:%s' % (args.bind, args.port),
+        rs.addr = self.args.bind
+        rs.port = self.args.port
+        rs.inner_run(addrport='%s:%s' % (args.bind, self.args.port),
            insecure_serving=True)
     
-    def runshell(self, **kwargs):
-        parser = self.argparser_shell()
-        args = parser.parse_args()
+    def shell(self, **kwargs):
         new_settings = self.configure(args=args, **kwargs)
         self.setup_database(new_settings, no_sync=args.no_sync)
         from django.core.management import call_command
         call_command('shell')
         
-    def runmanage(self, **kwargs):
-        parser = self.argparser_manage()
-        args, rest = parser.parse_known_args()
+    def manage(self, **kwargs):
         new_settings = self.configure(args=args, **kwargs)
         self.setup_database(new_settings, no_sync=args.no_sync)
         from django.core.management import execute_from_command_line
         execute_from_command_line([sys.argv[0]] + rest)
                 
-    def handle_args(self, args):
-        return {}
-                
-    def configure(self, args=None, **kwargs):
-        
-        if 'MEDIA_ROOT' in self.new_settings and 'MEDIA_ROOT' in kwargs:
-            del kwargs['MEDIA_ROOT']
-        if 'STATIC_ROOT' in self.new_settings and 'STATIC_ROOT' in kwargs:
-            del kwargs['STATIC_ROOT']
-            
-        kwargs = self.new_settings
-        kwargs.update(self.handle_args(args))
-        settings.configure(default_settings=self.default_settings, **kwargs)
-        return settings
+    def configure(self, **kwargs):
+        tmp_dir_prefix = '%s-test-tmpdir' % self.appname
+        with temp_dir(prefix=tmp_dir_prefix) as STATIC_ROOT:
+            with temp_dir(prefix=tmp_dir_prefix) as MEDIA_ROOT:
+                if not 'MEDIA_ROOT' in self.new_settings:
+                    kwargs['MEDIA_ROOT'] = MEDIA_ROOT
+                if not 'STATIC_ROOT' in self.new_settings:
+                     kwargs['STATIC_ROOT'] = STATIC_ROOT
+                    
+                kwargs = self.new_settings
+                settings.configure(default_settings=self.default_settings, **kwargs)
+                return settings
                 
     def setup_database(self, settings, no_sync=False):
         if not no_sync:
