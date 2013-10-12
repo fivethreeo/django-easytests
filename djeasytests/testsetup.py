@@ -1,7 +1,16 @@
-from __future__ import with_statement
+from __future__ import print_function
+import multiprocessing
+import pkgutil
+import pyclbr
+import subprocess
 import os
 import sys
-import argparse
+import warnings
+
+from docopt import docopt
+from django import VERSION
+from django.utils import autoreload
+
 from djeasytests.tmpdir import temp_dir
 from django.conf import global_settings
 from django.conf import settings
@@ -18,16 +27,50 @@ class GlobalSettingsWrapper:
         except AttributeError:
             return getattr(self.default_settings, setting)
         
-        
+def _split(itr, num):
+    split = []
+    size = int(len(itr) / num)
+    for index in range(num):
+        split.append(itr[size * index:size * (index + 1)])
+    return split
+
+def _get_test_labels(test_modules):
+    test_labels = []
+    for test_module in test_modules:
+        for module in [name for _, name, _ in pkgutil.iter_modules([os.path.join(test_module,"tests")])]:
+            clsmembers = pyclbr.readmodule("%s.tests.%s" % (test_module, module))
+            for clsname, cls in clsmembers.items():
+                for method, _ in cls.methods.items():
+                    if method.startswith('test_'):
+                        test_labels.append('%s.%s.%s' % (test_module, clsname, method))
+    return test_labels
+
+def _test_run_worker(test_labels, settings=None, failfast=False, test_runner='django.test.simple.DjangoTestSuiteRunner'):
+    warnings.filterwarnings(
+        'error', r"DateTimeField received a naive datetime",
+        RuntimeWarning, r'django\.db\.models\.fields')
+    settings.TEST_RUNNER = test_runner
+    from django.test.utils import get_runner
+    TestRunner = get_runner(settings)
+
+    test_runner = TestRunner(verbosity=1, interactive=False, failfast=failfast)
+    failures = test_runner.run_tests(test_labels)
+    return failures
+
+def _test_in_subprocess(test_labels, script, db=None):
+    db = db and ['--db', db] or []
+    return subprocess.call(['python', script, 'test'] + db + test_labels)
+            
 class TestSetup(object):
     
     __doc__ = '''django development helper script.
 Usage:
-    %(filename)s [--parallel | --failfast] [--migrate] test [<test-label>...]
-    %(filename)s timed test [test-label...]
-    %(filename)s [--parallel] [--migrate] isolated test [<test-label>...]
-    %(filename)s [--port=<port>] [--bind=<bind>] [--migrate] server
-    %(filename)s [--migrate] shell
+    %(filename)s [--db] [--migrate] [--parallel | --failfast] test [<test-label>...]
+    %(filename)s [--db] [--migrate] timed test [<test-label>...]
+    %(filename)s [--db] [--migrate] [--parallel] isolated test [<test-label>...]
+    %(filename)s [--db] [--migrate] [--port=<port>] [--bind=<bind>] server
+    %(filename)s [--db] [--migrate] shell
+    %(filename)s [--db] [--migrate] manage
     %(filename)s compilemessages
     %(filename)s makemessages
 
@@ -39,14 +82,16 @@ Options:
     --failfast                  Stop tests on first failure (only if not --parallel).
     --port=<port>               Port to listen on [default: 8000].
     --bind=<bind>               Interface to bind to [default: 127.0.0.1].
+    --db=<db>                   Db to use 
 '''
     
     default_settings = None
     
-    def __init__(self, appname='djeasytests', settings={}, fallback_settings=None, default_settings=global_settings, version=None):
+    def __init__(self, appname='djeasytests', settings={}, test_modules=None, fallback_settings=None, default_settings=global_settings, version=None):
         
         self.version = version
-        
+        self.test_modules = test_modules or [appname]
+         
         if fallback_settings:
             if default_settings:
                 self.default_settings = GlobalSettingsWrapper(fallback_settings, default_settings)
@@ -94,71 +139,85 @@ Options:
             self.compilemessages()
         elif self.args['makemessages']:
             self.makemessages()
-                    
-    def test(self, **kwargs):
-
-        time_tests = getattr(args, 'time_tests', False)
-        
-        test_labels = ['%s.%s' % (self.appname, label) for label in self.args.test_labels]
-        if not test_labels:
-            test_labels = [self.appname]
             
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': ':memory:',
-            }
-        }
-        
-        self.configure(args=args, TEST_RUNNER=test_runner, JUNIT_OUTPUT_DIR=junit_output_dir,
-            TIME_TESTS=time_tests, DATABASES=DATABASES, **kwargs)
-            
-        from django.conf import settings
-        from django.test.utils import get_runner
-        TestRunner = get_runner(settings)
-    
-        test_runner = TestRunner(verbosity=args.verbosity, interactive=False, failfast=args.failfast)
-        failures = test_runner.run_tests(test_labels)
-        sys.exit(failures)
-                  
-    def server(self, **kwargs):
-        parser = self.argparser_testserver()
-        self.args = parser.parse_args()
-        new_settings = self.configure(args=args, **kwargs)
-        self.setup_database(new_settings, no_sync=args.no_sync)
-        from django.contrib.auth.models import User
-        if not User.objects.filter(is_superuser=True).exists():
-            usr = User()
-            usr.username = 'admin'
-            usr.email = 'admin@admin.com'
-            usr.set_password('admin')
-            usr.is_superuser = True
-            usr.is_staff = True
-            usr.is_active = True
-            usr.save()
-            print
-            print "A admin user (username: admin, password: admin) has been created."
-            print
+    def server(self, bind='127.0.0.1', port=8000, migrate=False):
+        if os.environ.get("RUN_MAIN") != "true":
+            from south.management.commands import syncdb, migrate
+            if migrate:
+                syncdb.Command().handle_noargs(interactive=False, verbosity=1, database='default')
+                migrate.Command().handle(interactive=False, verbosity=1)
+            else:
+                syncdb.Command().handle_noargs(interactive=False, verbosity=1, database='default', migrate=False, migrate_all=True)
+                migrate.Command().handle(interactive=False, verbosity=1, fake=True)
+            from django.contrib.auth.models import User
+            if not User.objects.filter(is_superuser=True).exists():
+                usr = User()
+                usr.username = 'admin'
+                usr.email = 'admin@admin.com'
+                usr.set_password('admin')
+                usr.is_superuser = True
+                usr.is_staff = True
+                usr.is_active = True
+                usr.save()
+                print('')
+                print("A admin user (username: admin, password: admin) has been created.")
+                print('')
         from django.contrib.staticfiles.management.commands import runserver
         rs = runserver.Command()
         rs.stdout = sys.stdout
         rs.stderr = sys.stderr
         rs.use_ipv6 = False
         rs._raw_ipv6 = False
-        rs.addr = self.args.bind
-        rs.port = self.args.port
-        rs.inner_run(addrport='%s:%s' % (args.bind, self.args.port),
-           insecure_serving=True)
+        rs.addr = bind
+        rs.port = port
+        autoreload.main(rs.inner_run, (), {
+            'addrport': '%s:%s' % (bind, port),
+            'insecure_serving': True,
+            'use_threading': True
+        })
+                        
+    def isolated(self, test_labels, parallel=False):
+        test_labels = test_labels or _get_test_labels()
+        if parallel:
+            pool = multiprocessing.Pool()
+            mapper = pool.map
+        else:
+            mapper = map
+        results = mapper(_test_in_subprocess, ([test_label] for test_label in test_labels))
+        failures = [test_label for test_label, return_code in zip(test_labels, results) if return_code != 0]
+        return failures
     
-    def shell(self, **kwargs):
-        new_settings = self.configure(args=args, **kwargs)
-        self.setup_database(new_settings, no_sync=args.no_sync)
+    def timed(self, test_labels):
+        return _test_run_worker(test_labels, test_runner='djeasytests.runners.TimedTestRunner')
+    
+    def test(self, test_labels, parallel=False, failfast=False):
+        test_labels = test_labels or _get_test_labels(self.test_modules)
+        if parallel:
+            worker_tests = _split(test_labels, multiprocessing.cpu_count())
+    
+            pool = multiprocessing.Pool()
+            failures = sum(pool.map(_test_run_worker, worker_tests))
+            return failures
+        else:
+            return _test_run_worker(test_labels, failfast)
+    
+    def compilemessages():
+        from django.core.management import call_command
+        os.chdir(self.appname)
+        call_command('compilemessages', all=True)
+    
+    def makemessages():
+        from django.core.management import call_command
+        os.chdir(self.appname)
+        call_command('makemessages', all=True)
+    
+    def shell():
         from django.core.management import call_command
         call_command('shell')
-        
+            
     def manage(self, **kwargs):
-        new_settings = self.configure(args=args, **kwargs)
-        self.setup_database(new_settings, no_sync=args.no_sync)
+        new_settings = self.configure()
+        self.setup_database(new_settings)
         from django.core.management import execute_from_command_line
         execute_from_command_line([sys.argv[0]] + rest)
                 
