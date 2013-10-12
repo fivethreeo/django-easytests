@@ -113,8 +113,8 @@ Options:
         self.dirname = os.path.dirname(self.path)
         self.filename = os.path.basename(self.path)
         self.args = self.get_args()
-        if self.args['test']:
-            if self.args['isolated']:
+        if self.args.get('test', False):
+            if self.args.get('isolated', False):
                 failures = self.isolated()
                 print()
                 print("Failed tests")
@@ -125,18 +125,18 @@ Options:
                 else:
                     print(" None")
                 num_failures = len(failures)
-            elif self.args['timed']:
+            elif self.args.get('timed', False):
                 num_failures = self.timed()
             else:
                 num_failures = self.test()
             sys.exit(num_failures)
-        elif self.args['server']:
+        elif self.args.get('server', False):
             self.server()
-        elif self.args['shell']:
+        elif self.args.get('shell', False):
             self.shell()
-        elif self.args['compilemessages']:
+        elif self.args.get('compilemessages', False):
             self.compilemessages()
-        elif self.args['makemessages']:
+        elif self.args.get('makemessages', False):
             self.makemessages()
             
     def server(self, bind='127.0.0.1', port=8000, migrate=False):
@@ -176,8 +176,8 @@ Options:
         })
                         
     def isolated(self):
-        parallel= self.args['parallel']
-        test_labels =  self.args['<test_label>'] or _get_test_labels(self.test_modules)
+        parallel= self.args.get('parallel', False)
+        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
         if parallel:
             pool = multiprocessing.Pool()
             mapper = pool.map
@@ -188,14 +188,14 @@ Options:
         return failures
     
     def timed(self):
-        test_labels =  self.args['<test_label>'] or _get_test_labels(self.test_modules)
+        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         return _test_run_worker(test_labels, test_settings, test_runner='djeasytests.runners.TimedTestRunner')
     
     def test(self):
-        parallel= self.args['parallel']
-        failfast= self.args['failfast']
-        test_labels =  self.args['<test_label>'] or _get_test_labels(self.test_modules)
+        parallel= self.args.get('parallel', False)
+        failfast= self.args.get('failfast', False)
+        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
