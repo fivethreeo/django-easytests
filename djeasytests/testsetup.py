@@ -45,7 +45,7 @@ def _get_test_labels(test_modules):
                         test_labels.append('%s.%s.%s' % (test_module, clsname, method))
     return test_labels
 
-def _test_run_worker(test_labels, settings=None, failfast=False, test_runner='django.test.simple.DjangoTestSuiteRunner'):
+def _test_run_worker(test_labels, settings, failfast=False, test_runner='django.test.simple.DjangoTestSuiteRunner'):
     warnings.filterwarnings(
         'error', r"DateTimeField received a naive datetime",
         RuntimeWarning, r'django\.db\.models\.fields')
@@ -57,8 +57,7 @@ def _test_run_worker(test_labels, settings=None, failfast=False, test_runner='dj
     failures = test_runner.run_tests(test_labels)
     return failures
 
-def _test_in_subprocess(test_labels, script, db=None):
-    db = db and ['--db', db] or []
+def _test_in_subprocess(test_labels, script):
     return subprocess.call(['python', script, 'test'] + db + test_labels)
             
 class TestSetup(object):
@@ -176,30 +175,36 @@ Options:
             'use_threading': True
         })
                         
-    def isolated(self, test_labels, parallel=False):
-        test_labels = test_labels or _get_test_labels()
+    def isolated(self):
+        parallel=self.args.parallel
+        test_labels = self.args.test_label or _get_test_labels(self.test_modules)
         if parallel:
             pool = multiprocessing.Pool()
             mapper = pool.map
         else:
             mapper = map
-        results = mapper(_test_in_subprocess, ([test_label] for test_label in test_labels))
+        results = mapper(_test_in_subprocess, ([test_label, self.path] for test_label in test_labels))
         failures = [test_label for test_label, return_code in zip(test_labels, results) if return_code != 0]
         return failures
     
-    def timed(self, test_labels):
-        return _test_run_worker(test_labels, test_runner='djeasytests.runners.TimedTestRunner')
+    def timed(self):
+        test_labels = self.args.test_label or _get_test_labels(self.test_modules)
+        test_settings = self.configure()
+        return _test_run_worker(test_labels, test_settings, test_runner='djeasytests.runners.TimedTestRunner')
     
-    def test(self, test_labels, parallel=False, failfast=False):
-        test_labels = test_labels or _get_test_labels(self.test_modules)
+    def test(self):
+        parallel=self.args.parallel
+        failfast=self.args.failfast
+        test_labels = self.args.test_label or _get_test_labels(self.test_modules)
+        test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
     
             pool = multiprocessing.Pool()
-            failures = sum(pool.map(_test_run_worker, worker_tests))
+            failures = sum(pool.map(lambda x:_test_run_worker(x, test_settings), worker_tests))
             return failures
         else:
-            return _test_run_worker(test_labels, failfast)
+            return _test_run_worker(test_labels, test_settings, failfast=failfast)
     
     def compilemessages():
         from django.core.management import call_command
