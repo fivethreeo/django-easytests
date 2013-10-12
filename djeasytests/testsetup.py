@@ -176,8 +176,8 @@ Options:
         })
                         
     def isolated(self):
-        parallel=self.args.parallel
-        test_labels = self.args.test_label or _get_test_labels(self.test_modules)
+        parallel= self.args['parallel']
+        test_labels =  self.args['<test_label>'] or _get_test_labels(self.test_modules)
         if parallel:
             pool = multiprocessing.Pool()
             mapper = pool.map
@@ -188,14 +188,14 @@ Options:
         return failures
     
     def timed(self):
-        test_labels = self.args.test_label or _get_test_labels(self.test_modules)
+        test_labels =  self.args['<test_label>'] or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         return _test_run_worker(test_labels, test_settings, test_runner='djeasytests.runners.TimedTestRunner')
     
     def test(self):
-        parallel=self.args.parallel
-        failfast=self.args.failfast
-        test_labels = self.args.test_label or _get_test_labels(self.test_modules)
+        parallel= self.args['parallel']
+        failfast= self.args['failfast']
+        test_labels =  self.args['<test_label>'] or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
