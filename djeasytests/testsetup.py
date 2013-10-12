@@ -65,12 +65,12 @@ class TestSetup(object):
     
     __doc__ = '''django development helper script.
 Usage:
-    %(filename)s [--db] [--migrate] [--parallel | --failfast] test [<test-label>...]
-    %(filename)s [--db] [--migrate] timed test [<test-label>...]
-    %(filename)s [--db] [--migrate] [--parallel] isolated test [<test-label>...]
-    %(filename)s [--db] [--migrate] [--port=<port>] [--bind=<bind>] server
-    %(filename)s [--db] [--migrate] shell
-    %(filename)s [--db] [--migrate] manage
+    %(filename)s [--migrate] [--parallel | --failfast] test [<test-label>...]
+    %(filename)s [--migrate] timed test [<test-label>...]
+    %(filename)s [--migrate] [--parallel] isolated test [<test-label>...]
+    %(filename)s [--migrate] [--port=<port>] [--bind=<bind>] server
+    %(filename)s [--migrate] shell
+    %(filename)s [--migrate] manage
     %(filename)s compilemessages
     %(filename)s makemessages
 
@@ -82,7 +82,6 @@ Options:
     --failfast                  Stop tests on first failure (only if not --parallel).
     --port=<port>               Port to listen on [default: 8000].
     --bind=<bind>               Interface to bind to [default: 127.0.0.1].
-    --db=<db>                   Db to use.
 '''
     
     default_settings = None
