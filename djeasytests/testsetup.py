@@ -82,7 +82,7 @@ Options:
     --failfast                  Stop tests on first failure (only if not --parallel).
     --port=<port>               Port to listen on [default: 8000].
     --bind=<bind>               Interface to bind to [default: 127.0.0.1].
-    --db=<db>                   Db to use 
+    --db=<db>                   Db to use.
 '''
     
     default_settings = None
@@ -107,6 +107,7 @@ Options:
         return self.__doc__ % {'filename': self.filename}
         
     def get_args(self):
+        print(self.get_doc())
         return docopt(self.get_doc(), version=self.version, options_first=True)
     
     def run(self, thefile):
