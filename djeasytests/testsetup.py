@@ -113,6 +113,11 @@ Options:
         self.path = os.path.abspath(thefile)
         self.dirname = os.path.dirname(self.path)
         self.filename = os.path.basename(self.path)
+        testing = os.path.join(self.dirname, 'testing')
+        
+        if not testing in sys.path:
+            sys.path.append(testing)
+        
         self.args = self.get_args()
         if self.args.get('test', False):
             if self.args.get('isolated', False):
