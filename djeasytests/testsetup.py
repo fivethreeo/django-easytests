@@ -47,13 +47,13 @@ def _get_test_labels(test_modules):
                         test_labels.append('%s.%s.%s' % (test_module, clsname, method))
     return test_labels
 
-def _test_run_worker(test_labels, settings, failfast=False, test_runner='django.test.simple.DjangoTestSuiteRunner'):
+def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='django.test.simple.DjangoTestSuiteRunner'):
     warnings.filterwarnings(
         'error', r"DateTimeField received a naive datetime",
         RuntimeWarning, r'django\.db\.models\.fields')
-    settings.TEST_RUNNER = test_runner
+    test_settings.TEST_RUNNER = test_runner
     from django.test.utils import get_runner
-    TestRunner = get_runner(settings)
+    TestRunner = get_runner(test_settings)
 
     test_runner = TestRunner(verbosity=1, interactive=False, failfast=failfast)
     failures = test_runner.run_tests(test_labels)
@@ -87,7 +87,7 @@ Options:
     
     default_settings = None
     
-    def __init__(self, appname='djeasytests', settings={}, test_modules=None, fallback_settings=None, default_settings=global_settings, version=None):
+    def __init__(self, appname='djeasytests', test_settings={}, test_modules=None, fallback_settings=None, default_settings=global_settings, version=None):
         
         self.version = version
         self.test_modules = test_modules or [appname]
@@ -100,7 +100,7 @@ Options:
         else:
             self.default_settings = default_settings
             
-        self.new_settings = settings
+        self.new_settings = test_settings
         self.appname = appname
 
     def get_doc(self):
@@ -229,7 +229,7 @@ Options:
         if not 'DATABASES' in self.new_settings:
             default_name = ':memory:' if self.args.get('test', False) else 'local.sqlite'
             db_url = os.environ.get("DATABASE_URL", "sqlite://localhost/%s" % default_name)
-            kwargs['DATABASES'] = dj_database_url.parse(db_url)
+            kwargs['DATABASES'] = {'default': dj_database_url.parse(db_url)}
             
         tmp_dir_prefix = '%s-test-tmpdir' % self.appname
         with temp_dir(prefix=tmp_dir_prefix) as STATIC_ROOT:
