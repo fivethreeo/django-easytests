@@ -19,32 +19,20 @@ For the development version:
 
     pip install -e git+git://github.com/fivethreeo/django-easytests.git#egg=django-easytests
 
-Example usage in runshell.py:
+Example usage in develop.py:
 -----------------------------
 
 ::
     
     #!/usr/bin/env python
     
-    import sys
-    import os
-    
     from djeasytests.testsetup import TestSetup
-    
-    # optionally add apps to path
-
-    local_apps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'local_apps')
-    if not local_apps in sys.path:
-        sys.path.append(local_apps)    
 
     settings = dict(
-        ROOT_URLCONF='project.urls',
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': 'app.sqlite'
-        },
+        ROOT_URLCONF='appname_test_project.urls',
         INSTALLED_APPS = [
+            'appname_test_project',
+            'appname',
             'django.contrib.auth',
             'django.contrib.contenttypes',
             'django.contrib.sessions',
@@ -54,66 +42,93 @@ Example usage in runshell.py:
         ]
     )
     
-    testsetup = TestSetup(appname='app', settings=settings)
+    testsetup = TestSetup(
+        appname='appname',
+        test_settings=settings
+    )
     
     if __name__ == '__main__':
-        testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
+        testsetup.run(__file__)
+
+Project structure
+-----------------
+
+    How to lay out files for using django-easytests::
+
+	django-appname
+	  ...
+	  appname/
+		__init__.py
+		views.py
+		urls.py
+		models.py
+		tests.py
+	  testing/
+	    appname_test_project/
+	        __init__.py
+	        templates/appname/
+	  README.rst
+	  MANIFEST.in
+	  LICENSE
+	  .travis.yml
+	  develop.py
+	  ...
 
 Using existing settings:
 -----------------------
 
-app/base_settings.py
-====================
+Useful for testing projects
+
+appname/base_settings.py
+========================
 
 ::
     
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'base.sqlite'
-        }
-    }
-
-app/settings.py
-===============
+    ROOT_URLCONF = 'appname.urls',
+    INSTALLED_APPS = [
+        'appname'.
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.admin',
+        'django.contrib.sites',
+        'django.contrib.staticfiles'
+    ]
+    
+    
+appname/settings.py
+===================
 
 ::
     
-    from app.base_settings import *
+    from appname.base_settings import *
     from local_settings import *
     
-app/local_settings.py
-======================
+appname/local_settings.py
+=========================
 
 ::
     
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'local.sqlite'
-        }
-    }
+    SOME_LOCAL_SETTING = False
 
 
-runshell.py
-===========
+develop.py
+==========
 
 ::    
-
     settings = dict(
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': 'app.sqlite'
-            }
-        }
+        DEBUG = True
     )
     
-    from app import base_settings
-    testsetup = TestSetup(appname='app', settings=settings, fallback_settings=base_settings)
+    from appname import base_settings
+    testsetup = TestSetup(
+       appname='appname',
+       test_settings=settings,
+       fallback_settings=base_settings
+    )
     
     if __name__ == '__main__':
-        testsetup.run('shell') # Can be 'tests', 'shell', 'testserver' or 'manage'
+        testsetup.run(__file__)
 
 default_settings
 ================
@@ -124,21 +139,76 @@ This can be changed by passing default_settings with a module/object other than 
 
 ::
 
-    from app import other_global_settings
-    testsetup = TestSetup(appname='app', settings=settings, fallback_settings=base_settings, default_settings=other_global_settings)    
+    from appname import other_global_settings
+    testsetup = TestSetup(
+        appname='appname',
+        test_settings=settings,
+        fallback_settings=base_settings,
+        default_settings=other_global_settings
+    )
 
-Example usage in runmanage.py:
-==============================
+Additional apps (test_modules) for testing
+==========================================
 
-::
+    Say you want this filestructure when the amount of test increase exponentially::
 
-    #!/usr/bin/env python
+    	django-appname
+    	  ...
+    	  appname/
+    		__init__.py
+    		views.py
+    		urls.py
+    		models.py
+    	  testing/
+    	    appname_test_project/
+    	        __init__.py
+    	        templates/appname/
+        	appname_modeltests/
+        		__init__.py
+        		tests.py
+        		models.py
+    	    appname_admintests/
+        		__init__.py
+        		tests.py
+        		models.py
+    	    appname_somothertests/
+        		__init__.py
+        		tests.py
+        		models.py
+    	  README.rst
+    	  MANIFEST.in
+    	  LICENSE
+    	  .travis.yml
+    	  develop.py
+    	  ...
+
+    In develop.py::
+        
+        from djeasytests.testsetup import TestSetup
     
-    from runshell import testsetup
+        settings = dict(
+            ROOT_URLCONF='appname_test_project.urls',
+            INSTALLED_APPS = [
+                'appname_modeltests',
+                'appname_admintests',
+                'appname_somothertests',
+                'appname_test_project',
+                'appname',
+                'django.contrib.auth',
+                'django.contrib.contenttypes',
+                'django.contrib.sessions',
+                'django.contrib.admin',
+                'django.contrib.sites',
+                'django.contrib.staticfiles'
+            ]
+        )
     
-    if __name__ == '__main__':
-        testsetup.run('manage') # Can be 'tests', 'shell', 'testserver' or 'manage'
+        testsetup = TestSetup(
+            appname='appname',
+            test_settings=settings,
+            test_modules=['appname_modeltests','appname_admintests','appname_somothertests']
+        )
         
-
-        
-        
+            
+        if __name__ == '__main__':
+            testsetup.run(__file__)
