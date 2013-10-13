@@ -144,6 +144,8 @@ Options:
             self.compilemessages()
         elif self.args.get('makemessages', False):
             self.makemessages()
+        elif self.args.get('manage', False):
+            self.manage()
             
     def server(self, bind='127.0.0.1', port=8000):
         self.configure()
