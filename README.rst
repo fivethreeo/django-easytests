@@ -115,7 +115,8 @@ appname/local_settings.py
 develop.py
 ==========
 
-::    
+::
+    
     settings = dict(
         DEBUG = True
     )
