@@ -8,12 +8,14 @@ import sys
 import warnings
 
 from docopt import docopt
+import dj_database_url
+
 from django import VERSION
 from django.utils import autoreload
-
-from djeasytests.tmpdir import temp_dir
 from django.conf import global_settings
 from django.conf import settings
+
+from djeasytests.tmpdir import temp_dir
 
 class GlobalSettingsWrapper:
     
@@ -58,7 +60,7 @@ def _test_run_worker(test_labels, settings, failfast=False, test_runner='django.
     return failures
 
 def _test_in_subprocess(test_labels, script):
-    return subprocess.call(['python', script, 'test'] + db + test_labels)
+    return subprocess.call(['python', script, 'test'] + test_labels)
             
 class TestSetup(object):
     
@@ -67,9 +69,9 @@ Usage:
     %(filename)s [--migrate] [--parallel | --failfast] test [<test-label>...]
     %(filename)s [--migrate] timed test [<test-label>...]
     %(filename)s [--migrate] [--parallel] isolated test [<test-label>...]
-    %(filename)s [--migrate] [--port=<port>] [--bind=<bind>] server
-    %(filename)s [--migrate] shell
-    %(filename)s [--migrate] manage
+    %(filename)s [--port=<port>] [--bind=<bind>] server
+    %(filename)s shell
+    %(filename)s manage [<args>...]
     %(filename)s compilemessages
     %(filename)s makemessages
 
@@ -77,7 +79,7 @@ Options:
     -h --help                   Show this screen.
     --version                   Show version.
     --parallel                  Run tests in parallel.
-    --migrate                   Use south migrations in test or server command.
+    --migrate                   Use south migrations in test command.
     --failfast                  Stop tests on first failure (only if not --parallel).
     --port=<port>               Port to listen on [default: 8000].
     --bind=<bind>               Interface to bind to [default: 127.0.0.1].
@@ -105,7 +107,6 @@ Options:
         return self.__doc__ % {'filename': self.filename}
         
     def get_args(self):
-        print(self.get_doc())
         return docopt(self.get_doc(), version=self.version, options_first=True)
     
     def run(self, thefile):
@@ -139,15 +140,8 @@ Options:
         elif self.args.get('makemessages', False):
             self.makemessages()
             
-    def server(self, bind='127.0.0.1', port=8000, migrate=False):
+    def server(self, bind='127.0.0.1', port=8000):
         if os.environ.get("RUN_MAIN") != "true":
-            from south.management.commands import syncdb, migrate
-            if migrate:
-                syncdb.Command().handle_noargs(interactive=False, verbosity=1, database='default')
-                migrate.Command().handle(interactive=False, verbosity=1)
-            else:
-                syncdb.Command().handle_noargs(interactive=False, verbosity=1, database='default', migrate=False, migrate_all=True)
-                migrate.Command().handle(interactive=False, verbosity=1, fake=True)
             from django.contrib.auth.models import User
             if not User.objects.filter(is_superuser=True).exists():
                 usr = User()
@@ -206,27 +200,37 @@ Options:
         else:
             return _test_run_worker(test_labels, test_settings, failfast=failfast)
     
-    def compilemessages():
+    def compilemessages(self):
+        self.configure()
         from django.core.management import call_command
         os.chdir(self.appname)
         call_command('compilemessages', all=True)
     
-    def makemessages():
+    def makemessages(self):
+        self.configure()
         from django.core.management import call_command
         os.chdir(self.appname)
         call_command('makemessages', all=True)
     
-    def shell():
+    def shell(self):
+        self.configure()
         from django.core.management import call_command
         call_command('shell')
             
-    def manage(self, **kwargs):
-        new_settings = self.configure()
-        self.setup_database(new_settings)
+    def manage(self):
+        self.configure()
         from django.core.management import execute_from_command_line
-        execute_from_command_line([sys.argv[0]] + rest)
+        execute_from_command_line([self.filename] + self.args.get('<args>', []))
                 
     def configure(self, **kwargs):
+        migrate = self.args.get('--migrate', False)
+        kwargs['SOUTH_TESTS_MIGRATE'] = migrate
+        
+        if not 'DATABASES' in self.new_settings:
+            default_name = ':memory:' if self.args.get('test', False) else 'local.sqlite'
+            db_url = os.environ.get("DATABASE_URL", "sqlite://localhost/%s" % default_name)
+            kwargs['DATABASES'] = dj_database_url.parse(db_url)
+            
         tmp_dir_prefix = '%s-test-tmpdir' % self.appname
         with temp_dir(prefix=tmp_dir_prefix) as STATIC_ROOT:
             with temp_dir(prefix=tmp_dir_prefix) as MEDIA_ROOT:
@@ -234,21 +238,7 @@ Options:
                     kwargs['MEDIA_ROOT'] = MEDIA_ROOT
                 if not 'STATIC_ROOT' in self.new_settings:
                      kwargs['STATIC_ROOT'] = STATIC_ROOT
-                    
-                kwargs = self.new_settings
+                kwargs.update(self.new_settings)
                 settings.configure(default_settings=self.default_settings, **kwargs)
                 return settings
-                
-    def setup_database(self, settings, no_sync=False):
-        if not no_sync:
-            databases = getattr(settings, 'DATABASES', None)
-            database_name = databases and databases['default']['NAME']
-            database_engine = databases and databases['default']['ENGINE'] 
-            if database_engine and database_name and database_engine == 'django.db.backends.sqlite3' and database_name != ':memory:':
-                new_db = not os.path.exists(database_name)
-                from django.core.management import call_command
-                if 'south' in settings.INSTALLED_APPS:
-                    call_command('syncdb', interactive=False, migrate_all=new_db)
-                    call_command('migrate', interactive=False, fake=new_db)
-                else:
-                    call_command('syncdb', interactive=False)
+
