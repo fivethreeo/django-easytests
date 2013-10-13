@@ -146,6 +146,7 @@ Options:
             self.makemessages()
             
     def server(self, bind='127.0.0.1', port=8000):
+        self.configure()
         if os.environ.get("RUN_MAIN") != "true":
             from django.contrib.auth.models import User
             if not User.objects.filter(is_superuser=True).exists():
