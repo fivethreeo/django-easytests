@@ -17,7 +17,7 @@ For the development version:
 
 ::
 
-    pip install -e git+git://github.com/fivethreeo/django-easytests.git#egg=django-easytests
+    pip install -e git+git://github.com/fivethreeo/django-easytests.git@develop#egg=django-easytests
 
 Example usage in develop.py:
 -----------------------------
