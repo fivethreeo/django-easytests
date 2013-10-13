@@ -55,24 +55,24 @@ Project structure
 
     How to lay out files for using django-easytests::
 
-	django-appname
-	  ...
-	  appname/
-		__init__.py
-		views.py
-		urls.py
-		models.py
-		tests.py
-	  testing/
-	    appname_test_project/
-	        __init__.py
-	        templates/appname/
-	  README.rst
-	  MANIFEST.in
-	  LICENSE
-	  .travis.yml
-	  develop.py
-	  ...
+    django-appname
+      ...
+      appname/
+        __init__.py
+        views.py
+        urls.py
+        models.py
+        tests.py
+      testing/
+        appname_test_project/
+            __init__.py
+            templates/appname/
+      README.rst
+      MANIFEST.in
+      LICENSE
+      .travis.yml
+      develop.py
+      ...
 
 Using existing settings:
 -----------------------
@@ -152,35 +152,35 @@ Additional apps (test_modules) for testing
 
     Say you want this filestructure when the amount of test increase exponentially::
 
-    	django-appname
-    	  ...
-    	  appname/
-    		__init__.py
-    		views.py
-    		urls.py
-    		models.py
-    	  testing/
-    	    appname_test_project/
-    	        __init__.py
-    	        templates/appname/
-        	appname_modeltests/
-        		__init__.py
-        		tests.py
-        		models.py
-    	    appname_admintests/
-        		__init__.py
-        		tests.py
-        		models.py
-    	    appname_somothertests/
-        		__init__.py
-        		tests.py
-        		models.py
-    	  README.rst
-    	  MANIFEST.in
-    	  LICENSE
-    	  .travis.yml
-    	  develop.py
-    	  ...
+        django-appname
+          ...
+          appname/
+            __init__.py
+            views.py
+            urls.py
+            models.py
+          testing/
+            appname_test_project/
+                __init__.py
+                templates/appname/
+            appname_modeltests/
+                __init__.py
+                tests.py
+                models.py
+            appname_admintests/
+                __init__.py
+                tests.py
+                models.py
+            appname_somothertests/
+                __init__.py
+                tests.py
+                models.py
+          README.rst
+          MANIFEST.in
+          LICENSE
+          .travis.yml
+          develop.py
+          ...
 
     In develop.py::
         
