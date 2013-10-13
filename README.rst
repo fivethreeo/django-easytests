@@ -54,25 +54,25 @@ Project structure
 -----------------
 
     How to lay out files for using django-easytests::
-
-    django-appname
-      ...
-      appname/
-        __init__.py
-        views.py
-        urls.py
-        models.py
-        tests.py
-      testing/
-        appname_test_project/
+    
+        django-appname
+          ...
+          appname/
             __init__.py
-            templates/appname/
-      README.rst
-      MANIFEST.in
-      LICENSE
-      .travis.yml
-      develop.py
-      ...
+            views.py
+            urls.py
+            models.py
+            tests.py
+          testing/
+            appname_test_project/
+                __init__.py
+                templates/appname/
+          README.rst
+          MANIFEST.in
+          LICENSE
+          .travis.yml
+          develop.py
+          ...
 
 Using existing settings:
 -----------------------
