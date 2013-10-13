@@ -49,7 +49,7 @@ Example usage in develop.py:
     
     if __name__ == '__main__':
         testsetup.run(__file__)
-
+    
 Project structure
 -----------------
 
@@ -73,6 +73,31 @@ Project structure
           .travis.yml
           develop.py
           ...
+
+Running tests and commands
+--------------------------
+
+::
+
+    develop.py test
+    develop.py --failfast test
+    develop.py --parallel test
+    develop.py --migrate test
+    develop.py test test_labels here
+    develop.py timed test
+    develop.py isolated test
+    develop.py manage help
+    develop.py manage syncdb
+    develop.py server
+
+Using a custom database
+-----------------------
+
+Simply set a environment varable::
+
+    export DATABASE_URL="postgres://myuser:mypass@localhost/mydb"
+    
+Then test, server and manage will use this database.
 
 Using existing settings:
 -----------------------
