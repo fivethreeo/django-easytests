@@ -185,7 +185,7 @@ Options:
             mapper = pool.map
         else:
             mapper = map
-        results = mapper(_test_in_subprocess, ([(test_label, self.path)] for test_label in test_labels))
+        results = mapper(_test_in_subprocess, [test_label, self.path] for test_label in test_labels)
         failures = [test_label for test_label, return_code in zip(test_labels, results) if return_code != 0]
         return failures
     
