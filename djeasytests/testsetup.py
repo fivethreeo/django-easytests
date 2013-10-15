@@ -209,6 +209,7 @@ Options:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
 
             pool = multiprocessing.Pool()
+            # fixme
             failures = sum(pool.map(_test_run_worker_settings, ([test, test_settings] for test in worker_tests)))
             return failures
         else:
