@@ -61,7 +61,7 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
 
 def _test_in_subprocess(args):
     test_label, script, migrate = args
-    return subprocess.call(['python', script] + (migrate and ['migrate'] or []) + ['test', test_label])
+    return subprocess.call(['python', script] + (migrate and ['--migrate'] or []) + ['test', test_label])
             
 class TestSetup(object):
     
