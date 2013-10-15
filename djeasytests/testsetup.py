@@ -60,8 +60,8 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
     return failures
 
 def _test_in_subprocess(args):
-    test_label, script = args
-    return subprocess.call(['python', script, 'test', test_label])
+    test_label, script, migrate = args
+    return subprocess.call(['python', script] + (migrate and ['migrate'] or []) + ['test', test_label])
             
 class TestSetup(object):
     
@@ -186,7 +186,8 @@ Options:
             mapper = pool.map
         else:
             mapper = map
-        results = mapper(_test_in_subprocess, ((test_label, self.path) for test_label in test_labels))
+        migrate = self.args.get('--migrate', False)    
+        results = mapper(_test_in_subprocess, ((test_label, self.path, migrate) for test_label in test_labels))
         failures = [test_label for test_label, return_code in zip(test_labels, results) if return_code != 0]
         return failures
     
