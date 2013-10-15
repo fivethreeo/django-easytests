@@ -203,9 +203,10 @@ Options:
         test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
-    
+            def rfunc(tests):
+                return _test_run_worker(tests, test_settings)
             pool = multiprocessing.Pool()
-            failures = sum(pool.map(lambda x:_test_run_worker(x, test_settings), worker_tests))
+            failures = sum(pool.map(rfunc, worker_tests))
             return failures
         else:
             return _test_run_worker(test_labels, test_settings, failfast=failfast)
