@@ -62,7 +62,11 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
 def _test_in_subprocess(args):
     test_label, script, migrate = args
     return subprocess.call(['python', script] + (migrate and ['--migrate'] or []) + ['test', test_label])
-            
+
+def _test_run_worker_settings(tests):
+    test_labels, test_settings = tests
+    return _test_run_worker(test_labels, test_settings)
+                            
 class TestSetup(object):
     
     __doc__ = '''django development helper script.
@@ -180,7 +184,7 @@ Options:
                         
     def isolated(self):
         parallel= self.args.get('--parallel', False)
-        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
+        test_labels =  self.args.get('<test-label>', '') or _get_test_labels(self.test_modules)
         if parallel:
             pool = multiprocessing.Pool()
             mapper = pool.map
@@ -198,14 +202,15 @@ Options:
     
     def test(self):
         parallel= self.args.get('--parallel', False)
-        failfast= self.args.get('---failfast', False)
+        failfast= self.args.get('--failfast', False)
         test_labels =  self.args.get('<test-label>', '') or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
-    
+
             pool = multiprocessing.Pool()
-            failures = sum(pool.map(lambda x:_test_run_worker(x, test_settings), worker_tests))
+            # fixme
+            failures = sum(pool.map(_test_run_worker_settings, ([test, test_settings] for test in worker_tests)))
             return failures
         else:
             return _test_run_worker(test_labels, test_settings, failfast=failfast)
