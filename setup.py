@@ -16,7 +16,7 @@ CLASSIFIERS = [
 setup(
     name='django-easytests',
     version=djeasytests.get_version(),
-    description='Slightly modified test utils from django-cms as a own module',
+    description='Modified test utils from django-cms as a own module',
     long_description=open(os.path.join(os.path.dirname(__file__), 'README.rst')).read(),
     author='Oyvind Saltvik',
     author_email='oyvind.saltvik@gmail.com',
@@ -25,5 +25,5 @@ setup(
     classifiers=CLASSIFIERS,
     include_package_data=True,
     zip_safe=False,
-    install_requires=['argparse', 'unittest-xml-reporting']
+    install_requires=['docopt', 'dj-database-url']
 )
