@@ -53,26 +53,26 @@ Example usage in develop.py:
 Project structure
 -----------------
 
-    How to lay out files for using django-easytests::
-    
-        django-appname
-          ...
-          appname/
+How to lay out files for using django-easytests::
+
+    django-appname
+      ...
+      appname/
+        __init__.py
+        views.py
+        urls.py
+        models.py
+        tests.py
+      testing/
+        appname_test_project/
             __init__.py
-            views.py
-            urls.py
-            models.py
-            tests.py
-          testing/
-            appname_test_project/
-                __init__.py
-                templates/appname/
-          README.rst
-          MANIFEST.in
-          LICENSE
-          .travis.yml
-          develop.py
-          ...
+            templates/appname/
+      README.rst
+      MANIFEST.in
+      LICENSE
+      .travis.yml
+      develop.py
+      ...
 
 Running tests and commands
 --------------------------
@@ -176,65 +176,65 @@ This can be changed by passing default_settings with a module/object other than 
 Additional apps (test_modules) for testing
 ==========================================
 
-    Say you want this filestructure when the amount of test increase exponentially::
+Say you want this filestructure when the amount of test increase exponentially::
 
-        django-appname
-          ...
-          appname/
+    django-appname
+      ...
+      appname/
+        __init__.py
+        views.py
+        urls.py
+        models.py
+      testing/
+        appname_test_project/
             __init__.py
-            views.py
-            urls.py
+            templates/appname/
+        appname_modeltests/
+            __init__.py
+            tests.py
             models.py
-          testing/
-            appname_test_project/
-                __init__.py
-                templates/appname/
-            appname_modeltests/
-                __init__.py
-                tests.py
-                models.py
-            appname_admintests/
-                __init__.py
-                tests.py
-                models.py
-            appname_somothertests/
-                __init__.py
-                tests.py
-                models.py
-          README.rst
-          MANIFEST.in
-          LICENSE
-          .travis.yml
-          develop.py
-          ...
+        appname_admintests/
+            __init__.py
+            tests.py
+            models.py
+        appname_somothertests/
+            __init__.py
+            tests.py
+            models.py
+      README.rst
+      MANIFEST.in
+      LICENSE
+      .travis.yml
+      develop.py
+      ...
 
-    In develop.py::
-        
-        from djeasytests.testsetup import TestSetup
+In develop.py::
     
-        settings = dict(
-            ROOT_URLCONF='appname_test_project.urls',
-            INSTALLED_APPS = [
-                'appname_modeltests',
-                'appname_admintests',
-                'appname_somothertests',
-                'appname_test_project',
-                'appname',
-                'django.contrib.auth',
-                'django.contrib.contenttypes',
-                'django.contrib.sessions',
-                'django.contrib.admin',
-                'django.contrib.sites',
-                'django.contrib.staticfiles'
-            ]
-        )
+    from djeasytests.testsetup import TestSetup
+
+    settings = dict(
+        ROOT_URLCONF='appname_test_project.urls',
+        INSTALLED_APPS = [
+            'appname_modeltests',
+            'appname_admintests',
+            'appname_somothertests',
+            'appname_test_project',
+            'appname',
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
+            'django.contrib.sessions',
+            'django.contrib.admin',
+            'django.contrib.sites',
+            'django.contrib.staticfiles'
+        ]
+    )
+
+    testsetup = TestSetup(
+        appname='appname',
+        test_settings=settings,
+        test_modules=['appname_modeltests','appname_admintests','appname_somothertests']
+    )
     
-        testsetup = TestSetup(
-            appname='appname',
-            test_settings=settings,
-            test_modules=['appname_modeltests','appname_admintests','appname_somothertests']
-        )
         
-            
-        if __name__ == '__main__':
-            testsetup.run(__file__)
+    if __name__ == '__main__':
+        testsetup.run(__file__)

@@ -59,8 +59,9 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
     failures = test_runner.run_tests(test_labels)
     return failures
 
-def _test_in_subprocess(test_labels, script):
-    return subprocess.call(['python', script, 'test'] + test_labels)
+def _test_in_subprocess(args):
+    test_label, script, migrate = args
+    return subprocess.call(['python', script] + (migrate and ['--migrate'] or []) + ['test', test_label])
             
 class TestSetup(object):
     
@@ -185,19 +186,20 @@ Options:
             mapper = pool.map
         else:
             mapper = map
-        results = mapper(_test_in_subprocess, ([test_label, self.path] for test_label in test_labels))
+        migrate = self.args.get('--migrate', False)    
+        results = mapper(_test_in_subprocess, ((test_label, self.path, migrate) for test_label in test_labels))
         failures = [test_label for test_label, return_code in zip(test_labels, results) if return_code != 0]
         return failures
     
     def timed(self):
-        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
+        test_labels =  self.args.get('<test-label>', '') or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         return _test_run_worker(test_labels, test_settings, test_runner='djeasytests.runners.TimedTestRunner')
     
     def test(self):
         parallel= self.args.get('parallel', False)
         failfast= self.args.get('failfast', False)
-        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
+        test_labels =  self.args.get('<test-label>', '') or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
