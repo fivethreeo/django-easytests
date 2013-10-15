@@ -63,8 +63,9 @@ def _test_in_subprocess(args):
     test_label, script, migrate = args
     return subprocess.call(['python', script] + (migrate and ['--migrate'] or []) + ['test', test_label])
 
-def rfunc(tests):
-    return _test_run_worker(tests, test_settings)
+def _test_run_worker_settings(tests):
+    test_labels, test_settings = tests
+    return _test_run_worker(test_labels, test_settings)
                             
 class TestSetup(object):
     
@@ -208,7 +209,7 @@ Options:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
 
             pool = multiprocessing.Pool()
-            failures = sum(pool.map(rfunc, worker_tests))
+            failures = sum(pool.map(_test_run_worker_settings, ([test, test_settings] for test in worker_tests)))
             return failures
         else:
             return _test_run_worker(test_labels, test_settings, failfast=failfast)
