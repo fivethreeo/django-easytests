@@ -59,7 +59,8 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
     failures = test_runner.run_tests(test_labels)
     return failures
 
-def _test_in_subprocess(test_labels, script):
+def _test_in_subprocess(args):
+    test_labels, script = args
     return subprocess.call(['python', script, 'test'] + test_labels)
             
 class TestSetup(object):
