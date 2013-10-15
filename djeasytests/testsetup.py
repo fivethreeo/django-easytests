@@ -180,7 +180,7 @@ Options:
                         
     def isolated(self):
         parallel= self.args.get('parallel', False)
-        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
+        test_labels =  self.args.get('<test-label>', '') or _get_test_labels(self.test_modules)
         if parallel:
             pool = multiprocessing.Pool()
             mapper = pool.map
@@ -191,14 +191,14 @@ Options:
         return failures
     
     def timed(self):
-        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
+        test_labels =  self.args.get('<test-label>', '') or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         return _test_run_worker(test_labels, test_settings, test_runner='djeasytests.runners.TimedTestRunner')
     
     def test(self):
         parallel= self.args.get('parallel', False)
         failfast= self.args.get('failfast', False)
-        test_labels =  self.args.get('<test_label>', '') or _get_test_labels(self.test_modules)
+        test_labels =  self.args.get('<test-label>', '') or _get_test_labels(self.test_modules)
         test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
@@ -229,7 +229,7 @@ Options:
     def manage(self):
         self.configure()
         from django.core.management import execute_from_command_line
-        execute_from_command_line(['%s manage' % self.filename] + self.args.get('<args>', []))
+        execute_from_command_line([self.filename] + self.args.get('<args>', []))
                 
     def configure(self, **kwargs):
         migrate = self.args.get('--migrate', False)
