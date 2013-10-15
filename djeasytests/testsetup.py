@@ -62,7 +62,10 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
 def _test_in_subprocess(args):
     test_label, script, migrate = args
     return subprocess.call(['python', script] + (migrate and ['--migrate'] or []) + ['test', test_label])
-            
+
+def rfunc(tests):
+    return _test_run_worker(tests, test_settings)
+                            
 class TestSetup(object):
     
     __doc__ = '''django development helper script.
@@ -203,8 +206,7 @@ Options:
         test_settings = self.configure()
         if parallel:
             worker_tests = _split(test_labels, multiprocessing.cpu_count())
-            def rfunc(tests):
-                return _test_run_worker(tests, test_settings)
+
             pool = multiprocessing.Pool()
             failures = sum(pool.map(rfunc, worker_tests))
             return failures
