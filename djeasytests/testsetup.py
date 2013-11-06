@@ -142,7 +142,7 @@ Options:
                 num_failures = self.test()
             sys.exit(num_failures)
         elif self.args.get('server', False):
-            self.server()
+            self.server(bind=self.args.get('--bind'), port=int(self.args.get('--port')))
         elif self.args.get('shell', False):
             self.shell()
         elif self.args.get('compilemessages', False):
