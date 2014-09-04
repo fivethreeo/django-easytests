@@ -62,7 +62,7 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
     TestRunner = get_runner(test_settings)
 
     # http://django.readthedocs.org/en/latest/releases/1.7.html#standalone-scripts
-    if VERSION[0:2] == (1, 7):
+    if VERSION[1] >= 7 or VERSION[0] > 1:
         import django
         django.setup()
 
