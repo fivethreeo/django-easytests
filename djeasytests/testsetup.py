@@ -61,6 +61,11 @@ def _test_run_worker(test_labels, test_settings, failfast=False, test_runner='dj
     from django.test.utils import get_runner
     TestRunner = get_runner(test_settings)
 
+    # http://django.readthedocs.org/en/latest/releases/1.7.html#standalone-scripts
+    if VERSION[0:2] == (1, 7):
+        import django
+        django.setup()
+
     test_runner = TestRunner(verbosity=1, interactive=False, failfast=failfast)
     failures = test_runner.run_tests(test_labels)
     return failures
