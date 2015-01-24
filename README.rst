@@ -4,6 +4,9 @@ django-easytests
 
 Utils for test setup based on test utils from django-cms
 
+Also take a look at django-better-test and django-app-manage.
+
+
 Installation
 ------------
 
